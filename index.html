@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZVY TOUR - Play & Win</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase App and Services (v9 Compatibility) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        body {
+            background: radial-gradient(circle at top, #0f0c20 0%, #050209 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .neon-border {
+            box-shadow: 0 0 15px rgba(255, 78, 41, 0.4);
+            border: 1px solid rgba(255, 78, 41, 0.6);
+        }
+        .neon-text {
+            text-shadow: 0 0 10px rgba(255, 78, 41, 0.8);
+        }
+        .neon-btn {
+            background: linear-gradient(90deg, #ff4e29, #ff1f69);
+            transition: 0.3s ease;
+        }
+        .neon-btn:hover {
+            box-shadow: 0 0 20px rgba(255, 31, 105, 0.8);
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen">
+
+    <!-- NAVIGATION BAR -->
+    <nav class="bg-[#0f0c20] border-b border-purple-900/40 p-4 sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-black tracking-wider text-[#ff4e29] neon-text">ZVY TOUR</h1>
+            <div id="user-info" class="hidden flex items-center gap-4">
+                <span id="wallet-balance" class="bg-[#1e1a3a] border border-purple-500/30 px-3 py-1.5 rounded-lg text-sm font-bold text-yellow-400">
+                    <i class="fa-solid fa-wallet mr-1"></i> ৳<span id="balance-val">150</span>
+                </span>
+                <button id="logout-btn" class="text-gray-400 hover:text-red-500 text-sm font-semibold">লগআউট</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="container mx-auto flex flex-col items-center justify-center px-4 py-20">
+        <div class="max-w-md w-full bg-[#15112e] rounded-2xl p-8 border border-purple-500/20 text-center neon-border">
+            <h2 class="text-4xl font-extrabold text-[#ff4e29] mb-2 neon-text">ZVY TOUR</h2>
+            <p class="text-gray-400 text-sm font-bold mb-8 tracking-widest">PLAY LIKE A PRO, WIN LIKE A KING</p>
+            
+            <div class="bg-[#1e1a3a] rounded-xl p-5 mb-8 text-left border border-purple-500/20">
+                <p class="mb-3 text-sm font-medium"><i class="fa-solid fa-trophy text-[#ff4e29] mr-2"></i> ডেইলি ফ্রি ফায়ার টুর্নামেন্ট</p>
+                <p class="mb-3 text-sm font-medium"><i class="fa-solid fa-money-bill-trend-up text-green-400 mr-2"></i> ইনস্ট্যান্ট বিকাশ ও নগদ উইথড্রয়াল</p>
+                <p class="text-sm font-medium"><i class="fa-solid fa-shield-halved text-blue-400 mr-2"></i> ১০০% হ্যাকার মুক্ত ম্যাচ রুম</p>
+            </div>
+
+            <button id="google-login-btn" class="w-full py-4 rounded-xl font-bold text-white neon-btn flex items-center justify-center gap-3">
+                <i class="fa-brands fa-google text-lg"></i> GOOGLE দিয়ে লগইন করুন
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="dashboard-screen" class="container mx-auto px-4 py-8 hidden">
+        <!-- Banner Card -->
+        <div class="bg-gradient-to-r from-[#1e1a3a] to-[#15112e] rounded-2xl p-6 border border-purple-500/20 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div>
+                <h3 class="text-2xl font-bold text-white mb-1" id="welcome-msg">স্বাগতম, গেমার!</h3>
+                <p class="text-gray-400 text-sm">আপনার প্রিয় টুর্নামেন্টে জয়েন করুন এবং জিতে নিন আকর্ষণীয় পুরষ্কার।</p>
+            </div>
+            <button class="px-6 py-3 rounded-xl bg-green-500 hover:bg-green-600 font-bold text-sm transition" onclick="alert('বিকাশ বা নগদ নম্বরঃ ০১৭XXXXXXXX এ সেন্ড মানি করে অ্যাডমিনের সাথে যোগাযোগ করুন।')">
+                <i class="fa-solid fa-plus mr-2"></i> টাকা অ্যাড করুন
+            </button>
+        </div>
+
+        <!-- Matches Section -->
+        <h4 class="text-xl font-extrabold text-[#ff4e29] mb-6 tracking-wide">চলতি টুর্নামেন্ট সমূহ</h4>
+        <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Matches will be loaded dynamically here -->
+        </div>
+    </div>
+
+    <!-- JOIN MATCH MODAL -->
+    <div id="join-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-[#1e1a3a] rounded-2xl p-6 max-w-md w-full border border-purple-500/40">
+            <h3 class="text-xl font-bold text-[#ff4e29] mb-4">ম্যাচে জয়েন করুন</h3>
+            <p class="text-sm text-gray-300 mb-4" id="modal-match-fee">এন্ট্রি ফি: ৳০</p>
+            <input type="text" id="ign-input" placeholder="আপনার Free Fire IGN (গেমের নাম)" class="w-full bg-[#15112e] border border-gray-600 rounded-xl px-4 py-3 text-white mb-6 focus:outline-none focus:border-[#ff4e29]">
+            <div class="flex gap-4">
+                <button id="cancel-join-btn" class="flex-1 py-3 rounded-xl bg-gray-700 font-bold text-sm">বাতিল</button>
+                <button id="confirm-join-btn" class="flex-1 py-3 rounded-xl neon-btn font-bold text-sm">কনফার্ম জয়েন</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ফায়ারবেস কনফিগারেশন ---
+        // ভাই, এখানে তোর নিজের ফায়ারবেস প্রোজেক্টের ক্রেডেনশিয়াল বসিয়ে দিবি
+        const firebaseConfig = {
+  apiKey: "AIzaSyDya0Jd6XkK0db6tDMU-V7xM7dy5gKBk4k",
+  authDomain: "ai-turnament-app.firebaseapp.com",
+  databaseURL: "https://ai-turnament-app-default-rtdb.firebaseio.com",
+  projectId: "ai-turnament-app",
+  storageBucket: "ai-turnament-app.firebasestorage.app",
+  messagingSenderId: "478532172993",
+  appId: "1:478532172993:web:f125911110f63968dd6840",
+  measurementId: "G-789KP9HC5H"
+};
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUser = null;
+        let selectedMatchId = null;
+        let selectedMatchFee = 0;
+
+        // UI Element References
+        const loginScreen = document.getElementById('login-screen');
+        const dashboardScreen = document.getElementById('dashboard-screen');
+        const userInfo = document.getElementById('user-info');
+        const welcomeMsg = document.getElementById('welcome-msg');
+        const matchesContainer = document.getElementById('matches-container');
+        const joinModal = document.getElementById('join-modal');
+        const ignInput = document.getElementById('ign-input');
+
+        // Auth State Listener
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                loginScreen.classList.add('hidden');
+                dashboardScreen.classList.remove('hidden');
+                userInfo.classList.remove('hidden');
+                welcomeMsg.innerText = `স্বাগতম, ${user.displayName}!`;
+                loadMatches();
+            } else {
+                currentUser = null;
+                loginScreen.classList.remove('hidden');
+                dashboardScreen.classList.add('hidden');
+                userInfo.classList.add('hidden');
+            }
+        });
+
+        // Google Login
+        document.getElementById('google-login-btn').addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(err => alert("লগইন ব্যর্থ: " + err.message));
+        });
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            auth.signOut();
+        });
+
+        // Load Matches from Firestore
+        function loadMatches() {
+            db.collection("matches").onSnapshot(snapshot => {
+                matchesContainer.innerHTML = '';
+                if (snapshot.empty) {
+                    matchesContainer.innerHTML = '<p class="text-gray-400">এই মুহূর্তে কোনো ম্যাচ লাইভ নেই।</p>';
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const match = doc.data();
+                    const matchId = doc.id;
+                    const card = `
+                        <div class="bg-[#15112e] rounded-xl p-5 border border-purple-500/20 flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <h5 class="font-bold text-lg text-white">${match.title}</h5>
+                                    <span class="bg-[#ff4e29]/20 text-[#ff4e29] text-xs font-bold px-2.5 py-1 rounded">${match.map}</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mb-4"><i class="fa-regular fa-clock mr-1"></i> ${match.time}</p>
+                                <div class="grid grid-cols-3 gap-2 text-center bg-[#1e1a3a] py-3 rounded-lg mb-4">
+                                    <div>
+                                        <p class="text-[10px] text-gray-400">প্রাইজ পুল</p>
+                                        <p class="font-bold text-sm">৳${match.prizePool}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-gray-400">পার কিল</p>
+                                        <p class="font-bold text-sm">৳${match.perKill}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-gray-400">এন্ট্রি ফি</p>
+                                        <p class="font-bold text-sm text-[#ff4e29]">৳${match.entryFee}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="openJoinModal('${matchId}', ${match.entryFee})" class="w-full py-2.5 rounded-lg bg-purple-700 hover:bg-purple-800 font-bold text-sm transition">
+                                জয়েন করুন
+                            </button>
+                        </div>
+                    `;
+                    matchesContainer.innerHTML += card;
+                });
+            });
+        }
+
+        // Open Modal
+        window.openJoinModal = function(id, fee) {
+            selectedMatchId = id;
+            selectedMatchFee = fee;
+            document.getElementById('modal-match-fee').innerText = `এন্ট্রি ফি: ৳${fee}`;
+            joinModal.classList.remove('hidden');
+        };
+
+        // Close Modal
+        document.getElementById('cancel-join-btn').addEventListener('click', () => {
+            joinModal.classList.add('hidden');
+            ignInput.value = '';
+        });
+
+        // Join Match Logic
+        document.getElementById('confirm-join-btn').addEventListener('click', () => {
+            const ign = ignInput.value.trim();
+            if (!ign) {
+                alert("আপনার ফ্রি ফায়ার নাম দিন!");
+                return;
+            }
+            
+            // জয়েনিং ডাটা ফায়ারস্টোরে সেভ হবে
+            db.collection("participants").add({
+                matchId: selectedMatchId,
+                userId: currentUser.uid,
+                userName: currentUser.displayName,
+                ign: ign,
+                joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                alert("সফলভাবে জয়েন করেছেন!");
+                joinModal.classList.add('hidden');
+                ignInput.value = '';
+            }).catch(err => alert("ত্রুটি: " + err.message));
+        });
+    </script>
+</body>
+</html>

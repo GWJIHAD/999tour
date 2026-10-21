@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZVY TOUR - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-[#050209] text-white min-h-screen p-6">
+
+    <div class="max-w-2xl mx-auto bg-[#15112e] rounded-2xl p-8 border border-purple-500/20 mt-10">
+        <h2 class="text-3xl font-black text-[#ff4e29] mb-6 text-center">ZVY TOUR ADMIN PANEL</h2>
+        
+        <form id="match-form" class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold mb-2">ম্যাচের নাম / টাইটেল</label>
+                <input type="text" id="title" required placeholder="যেমন: BERMUDA WAR - SOLO" class="w-full bg-[#1e1a3a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#ff4e29]">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">ম্যাপ</label>
+                    <input type="text" id="map" required placeholder="Bermuda / Purgatory" class="w-full bg-[#1e1a3a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#ff4e29]">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">সময় ও তারিখ</label>
+                    <input type="text" id="time" required placeholder="যেমন: আজ রাত ৯:০০ টা" class="w-full bg-[#1e1a3a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#ff4e29]">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">মোট প্রাইজ পুল (৳)</label>
+                    <input type="number" id="prize" required placeholder="1000" class="w-full bg-[#1e1a3a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#ff4e29]">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">প্রতি কিল (৳)</label>
+                    <input type="number" id="perkill" required placeholder="10" class="w-full bg-[#1e1a3a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#ff4e29]">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">এন্ট্রি ফি (৳)</label>
+                    <input type="number" id="entryfee" required placeholder="30" class="w-full bg-[#1e1a3a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#ff4e29]">
+                </div>
+            </div>
+
+            <button type="submit" class="w-full py-4 rounded-xl bg-[#ff4e29] hover:bg-[#ff1f69] font-bold transition">
+                ম্যাচ পাবলিশ করুন 🚀
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // --- ফায়ারবেস কনফিগারেশন ---
+        // ভাই, এখানেও তোর ফায়ারবেস কনফিগারেশন কপি করে বসাবি
+        const firebaseConfig = {
+  apiKey: "AIzaSyDya0Jd6XkK0db6tDMU-V7xM7dy5gKBk4k",
+  authDomain: "ai-turnament-app.firebaseapp.com",
+  databaseURL: "https://ai-turnament-app-default-rtdb.firebaseio.com",
+  projectId: "ai-turnament-app",
+  storageBucket: "ai-turnament-app.firebasestorage.app",
+  messagingSenderId: "478532172993",
+  appId: "1:478532172993:web:f125911110f63968dd6840",
+  measurementId: "G-789KP9HC5H"
+};
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // ফর্ম সাবমিট হ্যান্ডলার
+        document.getElementById('match-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('title').value;
+            const map = document.getElementById('map').value;
+            const time = document.getElementById('time').value;
+            const prizePool = parseInt(document.getElementById('prize').value);
+            const perKill = parseInt(document.getElementById('perkill').value);
+            const entryFee = parseInt(document.getElementById('entryfee').value);
+
+            // ফায়ারবেস ফায়ারস্টোরে ম্যাচ অ্যাড করা
+            db.collection("matches").add({
+                title: title,
+                map: map,
+                time: time,
+                prizePool: prizePool,
+                perKill: perKill,
+                entryFee: entryFee,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                alert("অভিনন্দন ভাই! ম্যাচটি সফলভাবে লাইভ করা হয়েছে।");
+                document.getElementById('match-form').reset();
+            }).catch(err => {
+                alert("ত্রুটি: " + err.message);
+            });
+        });
+    </script>
+</body>
+</html>
